@@ -15,10 +15,6 @@ static inline float wSum(float v[], float w[], int size){
     return result;
 }
 
-static inline float normalize(uint8_t x){
-    return x / 255.0f;
-}
-
 static inline float neuronActivation(float inputs[], float weights[], int size, float bias){
     float sum = wSum(inputs, weights, size);
     sum += bias;
