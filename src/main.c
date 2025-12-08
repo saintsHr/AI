@@ -61,18 +61,5 @@ int main(int argc, char* argv[]){
         inputNeurons[i] = buffer[i] / 255.0f;
     }
 
-    const char *gradient = " .:-=+*#%@";
-    int gradSize = 10;
-
-    for (int y = 0; y < imgH; y++) {
-        for (int x = 0; x < imgW; x++) {
-            int idx = y * imgW + x;
-            float v = inputNeurons[idx];      // 0.0 → 1.0
-            int gi = (int)(v * (gradSize - 1));  // transforma em índice 0–9
-            printf("%c", gradient[gi]);
-        }
-        printf("\n");
-    }
-
     return 0;
 }
