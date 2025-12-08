@@ -16,9 +16,9 @@ int main(int argc, char* argv[]){
     float outputNeurons[10];
 
     // Weights
-    float inputWeights[imageSize][l1Size];
-    float l1Weights[l1Size][l2Size];
-    float l2Weights[l2Size][10];
+    float inputWeights[l1Size][imageSize];
+    float l1Weights[l2Size][l1Size];
+    float l2Weights[10][l2Size];
 
     // Biases
     float l1Bias[l1Size];
@@ -59,6 +59,26 @@ int main(int argc, char* argv[]){
     // fills input layer with buffer
     for (int i = 0; i < imageSize; i++) {
         inputNeurons[i] = buffer[i] / 255.0f;
+    }
+
+    // processes input -> layer 1
+    for (int i = 0; i < l1Size; i++) {
+        l1Neurons[i] = sigmoid(wSum(inputNeurons, inputWeights[i], imageSize) + l1Bias[i]);
+    }
+
+    // processes layer 1 -> layer 2
+    for (int i = 0; i < l2Size; i++) {
+        l2Neurons[i] = sigmoid(wSum(l1Neurons, l1Weights[i], l1Size) + l2Bias[i]);
+    }
+
+    // processes layer 2 -> output
+    for (int i = 0; i < 10; i++) {
+        outputNeurons[i] = sigmoid(wSum(l2Neurons, l2Weights[i], l2Size) + outputBias[i]);
+    }
+
+    // prints output (for debug)
+    for (int i = 0; i < 10; i++){
+        printf("%f\n", outputNeurons[i]);
     }
 
     return 0;
