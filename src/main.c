@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <time.h>
 
 #include "utils.h"
 #include "config.h"
@@ -25,6 +27,37 @@ void forwardPass(float inputNeurons[],
 
     for (int i = 0; i < 10; i++)
         outputNeurons[i] = sigmoid(wSum(l2Neurons, l2Weights[i], l2Size) + outputBias[i]);
+}
+
+void initNetwork(float inputWeights[l1Size][imageSize],
+                 float l1Weights[l2Size][l1Size],
+                 float l2Weights[10][l2Size],
+                 float l1Bias[l1Size],
+                 float l2Bias[l2Size],
+                 float outputBias[10])
+{
+    srand((unsigned int)time(NULL));
+
+    // input -> l1
+    for (int i = 0; i < l1Size; i++) {
+        l1Bias[i] = 0.0f;
+        for (int j = 0; j < imageSize; j++)
+            inputWeights[i][j] = ((float)rand() / RAND_MAX - 0.5f) * 0.1f; // -0.05 a 0.05
+    }
+
+    // l1 -> l2
+    for (int i = 0; i < l2Size; i++) {
+        l2Bias[i] = 0.0f;
+        for (int j = 0; j < l1Size; j++)
+            l1Weights[i][j] = ((float)rand() / RAND_MAX - 0.5f) * 0.1f;
+    }
+
+    // l2 -> output
+    for (int i = 0; i < 10; i++) {
+        outputBias[i] = 0.0f;
+        for (int j = 0; j < l2Size; j++)
+            l2Weights[i][j] = ((float)rand() / RAND_MAX - 0.5f) * 0.1f;
+    }
 }
 
 int getPredicted(float outputNeurons[]){
@@ -63,6 +96,7 @@ int main(int argc, char* argv[]){
             "<train> -> trains the AI\n"
             "<test> -> test the AI's accuracy\n"
             "<file> -> feeds the AI a .bmp image\n"
+            "<init> -> inits the network with random numbers\n"
             "[image] -> (optional) image to feed the AI, only used when arg 1 is 'file'\n"
             "======================================\n"
         );
@@ -96,7 +130,33 @@ int main(int argc, char* argv[]){
     if (strcmp(argv[1], "test") == 0 && argc == 2){
         
     } else
+    if (strcmp(argv[1], "init") == 0 && argc == 2){
+        initNetwork(inputWeights,
+                    l1Weights,
+                    l2Weights,
+                    l1Bias,
+                    l2Bias,
+                    outputBias
+        );
+        saveNetwork("data/network.bin",
+                    inputWeights,
+                    l1Weights,
+                    l2Weights,
+                    l1Bias,
+                    l2Bias,
+                    outputBias
+        );
+    } else 
     if (strcmp(argv[1], "file") == 0 && argc == 3){
+
+        loadNetwork("data/network.bin",
+                    inputWeights,
+                    l1Weights,
+                    l2Weights,
+                    l1Bias,
+                    l2Bias,
+                    outputBias
+        );
 
         if (loadBMP(argv[2], inputNeurons) != 0) return 2;
 
@@ -137,6 +197,7 @@ int main(int argc, char* argv[]){
             "<train>  ->  trains the AI\n"
             "<test>   ->  test the AI's accuracy\n"
             "<file>   ->  feeds the AI a .bmp image\n"
+            "<init> -> inits the network with random numbers\n"
             "[image]  ->  image to feed the AI, needed when arg 1 is 'file'\n"
             "================================================================\n"
         );

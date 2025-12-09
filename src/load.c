@@ -41,3 +41,48 @@ int loadBMP(const char* filename, float inputNeurons[]){
 
     return 0;
 }
+
+void saveNetwork(const char* filename,
+                 float inputWeights[l1Size][imageSize],
+                 float l1Weights[l2Size][l1Size],
+                 float l2Weights[10][l2Size],
+                 float l1Bias[l1Size],
+                 float l2Bias[l2Size],
+                 float outputBias[10])
+{
+    FILE* f = fopen(filename, "wb");
+    if (!f) return;
+
+    fwrite(inputWeights, sizeof(float), l1Size * imageSize, f);
+    fwrite(l1Weights, sizeof(float), l2Size * l1Size, f);
+    fwrite(l2Weights, sizeof(float), 10 * l2Size, f);
+
+    fwrite(l1Bias, sizeof(float), l1Size, f);
+    fwrite(l2Bias, sizeof(float), l2Size, f);
+    fwrite(outputBias, sizeof(float), 10, f);
+
+    fclose(f);
+}
+
+int loadNetwork(const char* filename,
+                float inputWeights[l1Size][imageSize],
+                float l1Weights[l2Size][l1Size],
+                float l2Weights[10][l2Size],
+                float l1Bias[l1Size],
+                float l2Bias[l2Size],
+                float outputBias[10])
+{
+    FILE* f = fopen(filename, "rb");
+    if (!f) return 1;
+
+    fread(inputWeights, sizeof(float), l1Size * imageSize, f);
+    fread(l1Weights, sizeof(float), l2Size * l1Size, f);
+    fread(l2Weights, sizeof(float), 10 * l2Size, f);
+
+    fread(l1Bias, sizeof(float), l1Size, f);
+    fread(l2Bias, sizeof(float), l2Size, f);
+    fread(outputBias, sizeof(float), 10, f);
+
+    fclose(f);
+    return 0;
+}
