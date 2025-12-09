@@ -7,7 +7,7 @@ DEPFLAGS := -MMD -MP
 CFLAGS := -Iinclude -Wall -Wextra $(DEPFLAGS) `pkg-config --cflags --libs gtk+-3.0` -lm
 LDFLAGS := `pkg-config --cflags --libs gtk+-3.0` -lm
 
-TARGET := ia
+TARGET := AI
 
 .PHONY: all clean
 
@@ -24,4 +24,4 @@ build/%.o: src/%.c
 -include $(OBJ:.o=.d)
 
 clean:
-	rm -rf build $(TARGET)
+	rm -rf build bin

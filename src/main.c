@@ -42,7 +42,7 @@ void initNetwork(float inputWeights[l1Size][imageSize],
     for (int i = 0; i < l1Size; i++) {
         l1Bias[i] = 0.0f;
         for (int j = 0; j < imageSize; j++)
-            inputWeights[i][j] = ((float)rand() / RAND_MAX - 0.5f) * 0.1f; // -0.05 a 0.05
+            inputWeights[i][j] = ((float)rand() / RAND_MAX - 0.5f) * 0.1f;
     }
 
     // l1 -> l2
@@ -60,26 +60,12 @@ void initNetwork(float inputWeights[l1Size][imageSize],
     }
 }
 
-int getPredicted(float outputNeurons[]){
-    int predicted = -1;
-    float maxVal = outputNeurons[0];
-    int countMax = 1;
-
-    for (int i = 1; i < 10; i++){
-        if (outputNeurons[i] > maxVal){
-            maxVal = outputNeurons[i];
-            predicted = i;
-            countMax = 1;
-        } else if (outputNeurons[i] == maxVal){
-            countMax++;
-        }
+int getPredicted(float out[]){
+    int p = 0;
+    for(int i = 1; i < 10; i++){
+        if(out[i] > out[p]) p = i;
     }
-
-    if (countMax == 1) {
-        return predicted;
-    } else {
-        return -1;
-    }
+    return p;
 }
 
 int main(int argc, char* argv[]){
@@ -87,22 +73,21 @@ int main(int argc, char* argv[]){
 // =======================================================================================//
 
     // checks correct usage
-    if (argc < 2 || argc > 3) {
+    if (argc < 2 || argc > 3){
         printf(
-            "======================================\n"
+            "============================================================================\n"
             "Incorrect Usage\n"
-            "Usage: ./ai <train/test/file> [image]\n"
-            "======================================\n"
+            "Usage: ./ai <train/test/file/init> [image]\n"
+            "============================================================================\n"
             "<train> -> trains the AI\n"
             "<test> -> test the AI's accuracy\n"
             "<file> -> feeds the AI a .bmp image\n"
             "<init> -> inits the network with random numbers\n"
             "[image] -> (optional) image to feed the AI, only used when arg 1 is 'file'\n"
-            "======================================\n"
+            "============================================================================\n"
         );
         return 1;
     }
-
 
 // =======================================================================================//
 
@@ -125,6 +110,69 @@ int main(int argc, char* argv[]){
 // =======================================================================================//
 
     if (strcmp(argv[1], "train") == 0 && argc == 2){
+
+        float* images;
+        uint8_t* labels;
+        int count;
+
+        loadNetwork("data/network.bin",
+                    inputWeights,
+                    l1Weights,
+                    l2Weights,
+                    l1Bias,
+                    l2Bias,
+                    outputBias
+        );
+
+        if (loadMNIST("data/train/train-images-idx3-ubyte",
+                       "data/train/train-labels-idx1-ubyte",
+                       &images,
+                       &labels,
+                       &count) != 0)
+        return 2;
+
+        int correct = 0;
+        
+        for (int i = 0; i < count; i++){
+            memcpy(inputNeurons, &images[i * imageSize], imageSize * sizeof(float));
+
+            forwardPass(
+                inputNeurons,
+                l1Neurons,
+                l2Neurons,
+                outputNeurons,
+
+                inputWeights,
+                l1Weights,
+                l2Weights,
+
+                l1Bias,
+                l2Bias,
+                outputBias
+            );
+
+            // backprop here
+            
+            int pred = getPredicted(outputNeurons);
+            unsigned char real = labels[i];
+
+            if (pred == real) correct++;
+
+            if (i % 1000 == 0){
+                printf("Image %d -> Predicted: %d | Expected: %d\n", i, pred, real);
+            }
+        }
+
+        printf("\nAccuracy: %.2f%%\n", (correct * 100.0f) / count);
+
+        saveNetwork("data/network.bin",
+                    inputWeights,
+                    l1Weights,
+                    l2Weights,
+                    l1Bias,
+                    l2Bias,
+                    outputBias
+        );
 
     } else 
     if (strcmp(argv[1], "test") == 0 && argc == 2){
@@ -158,7 +206,7 @@ int main(int argc, char* argv[]){
                     outputBias
         );
 
-        if (loadBMP(argv[2], inputNeurons) != 0) return 2;
+        if (loadBMP(argv[2], inputNeurons) != 0) return 3;
 
         forwardPass(
             inputNeurons,
@@ -182,26 +230,22 @@ int main(int argc, char* argv[]){
 
         // prints predicted number
         int predicted = getPredicted(outputNeurons);
-        if (predicted < 0){
-            printf("\nPredicted: None\n\n");
-        } else {
-            printf("\nPredicted: %d\n\n", predicted);
-        }
+        printf("\nPredicted: %d\n\n", predicted);
         
     } else {
         printf(
-            "================================================================\n"
+            "============================================================================\n"
             "Incorrect Usage\n"
-            "  Usage: ./ai <train/test/file> [image]\n"
-            "================================================================\n"
-            "<train>  ->  trains the AI\n"
-            "<test>   ->  test the AI's accuracy\n"
-            "<file>   ->  feeds the AI a .bmp image\n"
+            "Usage: ./ai <train/test/file/init> [image]\n"
+            "============================================================================\n"
+            "<train> -> trains the AI\n"
+            "<test> -> test the AI's accuracy\n"
+            "<file> -> feeds the AI a .bmp image\n"
             "<init> -> inits the network with random numbers\n"
-            "[image]  ->  image to feed the AI, needed when arg 1 is 'file'\n"
-            "================================================================\n"
+            "[image] -> (optional) image to feed the AI, only used when arg 1 is 'file'\n"
+            "============================================================================\n"
         );
-        return 2;
+        return 4;
     }
 
 // =======================================================================================//

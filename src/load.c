@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include "bmp.h"
 #include "config.h"
 
@@ -39,6 +40,76 @@ int loadBMP(const char* filename, float inputNeurons[]){
     for (int i = 0; i < imageSize; i++)
         inputNeurons[i] = buffer[i] / 255.0f;
 
+    return 0;
+}
+
+static uint32_t read_be_uint32(FILE* f){
+    uint8_t b[4];
+    fread(b, 1, 4, f);
+    return (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3];
+}
+
+int loadMNIST(
+    const char* imageFile,
+    const char* labelFile,
+    float** images_out,
+    uint8_t** labels_out,
+    int* count_out)
+{
+    // label reading
+    FILE* fl = fopen(labelFile, "rb");
+    if (!fl) return 1;
+
+    uint32_t magic_lbl = read_be_uint32(fl);
+    if (magic_lbl != 2049) { fclose(fl); return 2; }
+
+    uint32_t num_labels = read_be_uint32(fl);
+
+    uint8_t* labels = malloc(num_labels);
+    if (!labels) { fclose(fl); return 3; }
+
+    fread(labels, 1, num_labels, fl);
+    fclose(fl);
+
+    // image reading
+    FILE* fi = fopen(imageFile, "rb");
+    if (!fi) return 4;
+
+    uint32_t magic_img = read_be_uint32(fi);
+    if (magic_img != 2051) { fclose(fi); return 5; }
+
+    uint32_t num_images = read_be_uint32(fi);
+    uint32_t rows       = read_be_uint32(fi);
+    uint32_t cols       = read_be_uint32(fi);
+
+    int img_size = rows * cols;
+
+    if (num_images != num_labels) {
+        fclose(fi);
+        free(labels);
+        return 6;
+    }
+
+    float* images = malloc(sizeof(float) * num_images * img_size);
+    if (!images) {
+        fclose(fi);
+        free(labels);
+        return 7;
+    }
+
+    for (uint32_t i = 0; i < num_images; i++) {
+        for (int p = 0; p < img_size; p++) {
+            unsigned char px;
+            fread(&px, 1, 1, fi);
+            images[i * img_size + p] = px / 255.0f;
+        }
+    }
+
+    fclose(fi);
+
+    *images_out = images;
+    *labels_out = labels;
+    *count_out = num_images;
     return 0;
 }
 
