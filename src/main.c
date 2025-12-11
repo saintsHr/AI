@@ -204,6 +204,9 @@ int main(int argc, char* argv[]){
         return 2;
 
         int correct = 0;
+
+        srand(time(NULL));
+        shuffleDataset(images, labels, count, imageSize);
         
         printf("training...\n");
         for (int i = 0; i < count; i++){

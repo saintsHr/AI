@@ -24,3 +24,19 @@ static inline float neuronActivation(float inputs[], float weights[], int size, 
     sum += bias;
     return sigmoid(sum);
 }
+
+static inline void shuffleDataset(float* images, uint8_t* labels, int count, int imageSize){
+    for (int i = count - 1; i > 0; i--){
+        int j = rand() % (i + 1);
+
+        uint8_t tempLabel = labels[i];
+        labels[i] = labels[j];
+        labels[j] = tempLabel;
+
+        for (int p = 0; p < imageSize; p++){
+            float tmp = images[i * imageSize + p];
+            images[i * imageSize + p] = images[j * imageSize + p];
+            images[j * imageSize + p] = tmp;
+        }
+    }
+}

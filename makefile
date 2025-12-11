@@ -4,8 +4,8 @@ OBJ := $(patsubst src/%.c,build/%.o,$(SRC))
 CC := gcc
 
 DEPFLAGS := -MMD -MP
-CFLAGS := -Iinclude -Wall -Wextra $(DEPFLAGS) `pkg-config --cflags --libs gtk+-3.0` -lm
-LDFLAGS := `pkg-config --cflags --libs gtk+-3.0` -lm
+CFLAGS := -Iinclude -Wall -Wextra $(DEPFLAGS) -lm -O3
+LDFLAGS := -lm -O3
 
 TARGET := AI
 
