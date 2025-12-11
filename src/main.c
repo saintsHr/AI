@@ -205,6 +205,7 @@ int main(int argc, char* argv[]){
 
         int correct = 0;
         
+        printf("training...\n");
         for (int i = 0; i < count; i++){
             memcpy(inputNeurons, &images[i * imageSize], imageSize * sizeof(float));
 
@@ -241,8 +242,6 @@ int main(int argc, char* argv[]){
             int pred = getPredicted(outputNeurons);
             unsigned char real = labels[i];
             if (pred == real) correct++;
-
-            printf("training...\n");
         }
 
         printf("\nAccuracy: %.2f%%\n", (correct * 100.0f) / count);
@@ -259,6 +258,54 @@ int main(int argc, char* argv[]){
     } else 
     if (strcmp(argv[1], "test") == 0 && argc == 2){
         
+        float* images;
+        uint8_t* labels;
+        int count;
+
+        loadNetwork("data/network.bin",
+                    inputWeights,
+                    l1Weights,
+                    l2Weights,
+                    l1Bias,
+                    l2Bias,
+                    outputBias
+        );
+
+        if (loadMNIST("data/test/t10k-images-idx3-ubyte",
+                       "data/test/t10k-labels-idx1-ubyte",
+                       &images,
+                       &labels,
+                       &count) != 0)
+        return 2;
+
+        int correct = 0;
+        
+        printf("testing...\n");
+        for (int i = 0; i < count; i++){
+            memcpy(inputNeurons, &images[i * imageSize], imageSize * sizeof(float));
+
+            forwardPass(
+                inputNeurons,
+                l1Neurons,
+                l2Neurons,
+                outputNeurons,
+
+                inputWeights,
+                l1Weights,
+                l2Weights,
+
+                l1Bias,
+                l2Bias,
+                outputBias
+            );
+
+            int pred = getPredicted(outputNeurons);
+            unsigned char real = labels[i];
+            if (pred == real) correct++;
+        }
+
+        printf("\nAccuracy: %.2f%%\n", (correct * 100.0f) / count);
+
     } else
     if (strcmp(argv[1], "init") == 0 && argc == 2){
         initNetwork(inputWeights,
