@@ -68,6 +68,78 @@ int getPredicted(float out[]){
     return p;
 }
 
+float cost(float out, float wanted){
+    return pow((out - wanted), 2);
+}
+
+void backprop(
+    float inputNeurons[],
+    float l1Neurons[],
+    float l2Neurons[],
+    float outputNeurons[],
+    unsigned char label,
+
+    float inputWeights[l1Size][imageSize],
+    float l1Weights[l2Size][l1Size],
+    float l2Weights[10][l2Size],
+
+    float l1Bias[l1Size],
+    float l2Bias[l2Size],
+    float outputBias[10],
+
+    float lr
+)
+{
+    float target[10] = {0};
+    target[label] = 1.0f;
+
+    float deltaOut[10];
+    float deltaL2[l2Size];
+    float deltaL1[l1Size];
+
+    for (int k = 0; k < 10; k++) {
+        float error = outputNeurons[k] - target[k];
+        deltaOut[k] = error * (outputNeurons[k] * (1 - outputNeurons[k]));
+    }
+
+    for (int j = 0; j < l2Size; j++) {
+        float sum = 0.0f;
+        for (int k = 0; k < 10; k++)
+            sum += deltaOut[k] * l2Weights[k][j];
+
+        deltaL2[j] = sum * (l2Neurons[j] * (1 - l2Neurons[j]));
+    }
+
+    for (int j = 0; j < l1Size; j++) {
+        float sum = 0.0f;
+        for (int k = 0; k < l2Size; k++)
+            sum += deltaL2[k] * l1Weights[k][j];
+
+        deltaL1[j] = sum * (l1Neurons[j] * (1 - l1Neurons[j]));
+    }
+
+    for (int k = 0; k < 10; k++) {
+        for (int j = 0; j < l2Size; j++) {
+            l2Weights[k][j] -= lr * deltaOut[k] * l2Neurons[j];
+        }
+        outputBias[k] -= lr * deltaOut[k];
+    }
+
+    for (int j = 0; j < l2Size; j++) {
+        for (int i = 0; i < l1Size; i++) {
+            l1Weights[j][i] -= lr * deltaL2[j] * l1Neurons[i];
+        }
+        l2Bias[j] -= lr * deltaL2[j];
+    }
+
+    for (int j = 0; j < l1Size; j++) {
+        for (int i = 0; i < imageSize; i++) {
+            inputWeights[j][i] -= lr * deltaL1[j] * inputNeurons[i];
+        }
+        l1Bias[j] -= lr * deltaL1[j];
+    }
+}
+
 int main(int argc, char* argv[]){
 
 // =======================================================================================//
@@ -151,16 +223,26 @@ int main(int argc, char* argv[]){
                 outputBias
             );
 
-            // backprop here
-            
+            backprop(
+                inputNeurons,
+                l1Neurons,
+                l2Neurons,
+                outputNeurons,
+                labels[i],
+                inputWeights,
+                l1Weights,
+                l2Weights,
+                l1Bias,
+                l2Bias,
+                outputBias,
+                0.01f
+            );
+
             int pred = getPredicted(outputNeurons);
             unsigned char real = labels[i];
-
             if (pred == real) correct++;
 
-            if (i % 1000 == 0){
-                printf("Image %d -> Predicted: %d | Expected: %d\n", i, pred, real);
-            }
+            printf("training...\n");
         }
 
         printf("\nAccuracy: %.2f%%\n", (correct * 100.0f) / count);
@@ -223,10 +305,10 @@ int main(int argc, char* argv[]){
             outputBias
         );
 
-        // prints output (for debug)
+        // prints outputs
         printf("\n");
         for (int i = 0; i < 10; i++)
-            printf("%f\n", outputNeurons[i]);
+            printf("%d -> %.2f%%\n", i, outputNeurons[i] * 100);
 
         // prints predicted number
         int predicted = getPredicted(outputNeurons);

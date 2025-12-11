@@ -7,6 +7,10 @@ static inline float sigmoid(float x){
     return 1.0f / (1.0f + expf(-x));
 }
 
+static inline float sigmoidDerv(float a){
+    return a * (1 - a);
+}
+
 static inline float wSum(float v[], float w[], int size){
     float result = 0;
     for (int i = 0; i < size; i++){
